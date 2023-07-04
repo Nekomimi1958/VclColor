@@ -11,9 +11,9 @@
 #include <Vcl.ExtCtrls.hpp>
 #include <Vcl.ComCtrls.hpp>
 #include <Vcl.Imaging.pngimage.hpp>
-#include "usr_color.h"
 #include <Vcl.Menus.hpp>
 #include <Vcl.Dialogs.hpp>
+#include "usr_color.h"
 
 //---------------------------------------------------------------------------
 class TVclColForm : public TForm
@@ -22,29 +22,31 @@ __published:	// IDE で管理されるコンポーネント
 	TComboBox *FilterComboBox;
 	TComboBox *L_ComboBox;
 	TComboBox *TriComboBox;
+	TFontDialog *FontDialog1;
 	TImage *Image1;
 	TLabel *Label4;
 	TLabel *Label5;
 	TListBox *ColorListBox;
 	TListBox *ValListBox;
+	TMenuItem *CopyAllItem;
+	TMenuItem *CopyValItem;
+	TMenuItem *CustomSetItem;
+	TMenuItem *SelFontItem;
 	TPanel *CmpPanel;
 	TPanel *ColPanel;
-	TPanel *TriPanel;
+	TPanel *LeftPanel;
 	TPanel *RightPanel;
 	TPanel *TargetPanel;
 	TPanel *TopPanel;
+	TPanel *TriPanel;
 	TPanel *TriPanel1;
 	TPanel *TriPanel2;
 	TPanel *TriPanel3;
+	TPopupMenu *PopupMenu1;
+	TPopupMenu *PopupMenu2;
+	TPopupMenu *PopupMenu3;
 	TTabControl *TabControl1;
 	TTimer *Timer1;
-	TPanel *LeftPanel;
-	TPopupMenu *PopupMenu1;
-	TMenuItem *SelFontItem;
-	TFontDialog *FontDialog1;
-	TPopupMenu *PopupMenu2;
-	TMenuItem *CopyValItem;
-	TMenuItem *CopyAllItem;
 
 	void __fastcall FormCreate(TObject *Sender);
 	void __fastcall FormShow(TObject *Sender);
@@ -65,6 +67,7 @@ __published:	// IDE で管理されるコンポーネント
 	void __fastcall CopyValItemClick(TObject *Sender);
 	void __fastcall CopyAllItemClick(TObject *Sender);
 	void __fastcall SelFontItemClick(TObject *Sender);
+	void __fastcall CustomSetItemClick(TObject *Sender);
 
 private:	// ユーザー宣言
 	TIniFile *IniFile;
@@ -81,8 +84,7 @@ private:	// ユーザー宣言
 
 	TStringList *FCurList;
 	TStringList * __fastcall GetCurList() {
-		return ((TabControl1->TabIndex==1)? SysColList :
-				(TabControl1->TabIndex==2)? SafeColList : VclColList);
+		return ((TabControl1->TabIndex==1)? SysColList : (TabControl1->TabIndex==2)? SafeColList : VclColList);
 	}
 	__property TStringList *CurList = {read = GetCurList};
 
@@ -94,6 +96,7 @@ private:	// ユーザー宣言
 	}
 
 	void __fastcall ClearRightPanel();
+	void __fastcall SetTriColorCore(TColor col, UnicodeString cs);
 	void __fastcall SetTriColor(TColor col);
 
 	void __fastcall SetListBoxFont(TListBox *lp)
@@ -105,6 +108,8 @@ private:	// ユーザー宣言
 	}
 
 public:		// ユーザー宣言
+	UnicodeString CustomScheme;
+
 	__fastcall TVclColForm(TComponent* Owner);
 };
 //---------------------------------------------------------------------------

@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------//
 #include "usr_env.h"
 #include "Unit1.h"
+#include "Unit2.h"
 
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
@@ -28,6 +29,9 @@ void __fastcall TVclColForm::FormCreate(TObject *Sender)
 	ListFont = load_font_inf(IniFile, "List",	 Application->DefaultFont);
 	SetListBoxFont(ColorListBox);
 	SetListBoxFont(ValListBox);
+
+	CustomScheme = IniFile->ReadString("Option", "CustomScheme", "H72");
+	TriComboBox->Items->Strings[TriComboBox->Items->Count - 1] = "Custom Scheme (" + CustomScheme + ")";
 
 	VclColList  = new TStringList();
 	SafeColList = new TStringList();
@@ -247,7 +251,7 @@ void __fastcall TVclColForm::FormShow(TObject *Sender)
 
 	FilterComboBox->ItemIndex = 0;
 	L_ComboBox->ItemIndex     = 0;
-	TriComboBox->ItemIndex    = 0;
+	TriComboBox->ItemIndex    = IniFile->ReadInteger("Option", "TriComboIndex", 0);
 
 	TabControl1Change(NULL);
 }
@@ -256,6 +260,8 @@ void __fastcall TVclColForm::FormClose(TObject *Sender, TCloseAction &Action)
 {
 	save_form_pos(this, IniFile);
 	save_font_inf(IniFile, "List",	ListFont);
+	IniFile->WriteString( "Option", "CustomScheme", CustomScheme);
+	IniFile->WriteInteger("Option", "TriComboIndex", TriComboBox->ItemIndex);
 }
 //---------------------------------------------------------------------------
 void __fastcall TVclColForm::FormDestroy(TObject *Sender)
@@ -300,65 +306,84 @@ void __fastcall TVclColForm::FormResize(TObject *Sender)
 }
 
 //---------------------------------------------------------------------------
-void __fastcall TVclColForm::SetTriColor(TColor col)
+void __fastcall TVclColForm::SetTriColorCore(TColor col, UnicodeString cs)
 {
 	int h,s,l;
 	RgbToHsl(col, &h, &s, &l);
+	int m = StartsStr('S', cs)? 1 : StartsStr('L', cs)? 2 : 0;
+	int d = cs.SubString(2, 3).ToIntDef(0);
+	UnicodeString lbl;
+
+	switch (m) {
+	case 1:		//S
+		{
+			int ul   = 100 - d;
+			int s_p  = std::clamp(s + d,	 0, 100);
+			int s_p2 = std::clamp(s + d * 2, 0, 100);
+			int s_n  = std::clamp(s - d,	 0, 100);
+			int s_n2 = std::clamp(s - d * 2, 0, 100);
+			if (s<=ul && s>=d) {
+				SetPanelCol(TriPanel1,	HslToCol(h, s_p, l), lbl.sprintf(_T("+S%u"), s_p - s));
+				SetPanelCol(TriPanel2,	col, "0");
+				SetPanelCol(TriPanel3,	HslToCol(h, s_n, l), lbl.sprintf(_T("-S%u"), s - s_n));
+			}
+			else if (s>ul) {
+				SetPanelCol(TriPanel1,	col, "0");
+				SetPanelCol(TriPanel2,	HslToCol(h, s_n,  l), lbl.sprintf(_T("-S%u"), s - s_n));
+				SetPanelCol(TriPanel3,	HslToCol(h, s_n2, l), lbl.sprintf(_T("-S%u"), s - s_n2));
+			}
+			else if (s<d) {
+				SetPanelCol(TriPanel1,	col, "0");
+				SetPanelCol(TriPanel2,	HslToCol(h, s_p,  l), lbl.sprintf(_T("+S%u"), s_p - s));
+				SetPanelCol(TriPanel3,	HslToCol(h, s_p2, l), lbl.sprintf(_T("+S%u"), s_p2 - s));
+			}
+		}
+		break;
+	case 2:		//L
+		{
+			int ul   = 100 - d;
+			int l_p  = std::clamp(l + d,	 0, 100);
+			int l_p2 = std::clamp(l + d * 2, 0, 100);
+			int l_n  = std::clamp(l - d,	 0, 100);
+			int l_n2 = std::clamp(l - d * 2, 0, 100);
+			if (l<=ul && l>=d) {
+				SetPanelCol(TriPanel1,	HslToCol(h, s, l_p), lbl.sprintf(_T("+L%u"), l_p - l));
+				SetPanelCol(TriPanel2,	col, "0");
+				SetPanelCol(TriPanel3,	HslToCol(h, s, l_n), lbl.sprintf(_T("-L%u"), l - l_n));
+			}
+			else if (l>ul) {
+				SetPanelCol(TriPanel1,	col, "0");
+				SetPanelCol(TriPanel2,	HslToCol(h, s, l_n),  lbl.sprintf(_T("-L%u"), l - l_n));
+				SetPanelCol(TriPanel3,	HslToCol(h, s, l_n2), lbl.sprintf(_T("-L%u"), l - l_n2));
+			}
+			else if (l<d) {
+				SetPanelCol(TriPanel1,	col, "0");
+				SetPanelCol(TriPanel2,	HslToCol(h, s, l_p),  lbl.sprintf(_T("+L%u"), l_p - l));
+				SetPanelCol(TriPanel3,	HslToCol(h, s, l_p2), lbl.sprintf(_T("+L%u"), l_p2 - l));
+			}
+		}
+		break;
+	default:	//H
+		{
+			int h_n = h - d;  if (h_n<0) h_n += 360;
+			int h_p = (h + d)%360;
+			SetPanelCol(TriPanel1,	HslToCol(h_n, s, l), lbl.sprintf(_T("-H%u"), d)); 
+			SetPanelCol(TriPanel2,	col, "0");
+			SetPanelCol(TriPanel3,	HslToCol(h_p, s, l), lbl.sprintf(_T("+H%u"), d));
+		}
+	}
+}
+//---------------------------------------------------------------------------
+void __fastcall TVclColForm::SetTriColor(TColor col)
+{
 	UnicodeString ttyp = TriComboBox->Text;
-	if (SameText(ttyp, "Triad")) {
-		SetPanelCol(TriPanel1,	HslToCol((h + 240)%360, s, l), "-H120");
-		SetPanelCol(TriPanel2,	col, "0");
-		SetPanelCol(TriPanel3,	HslToCol((h + 120)%360, s, l), "+H120");
-	}
-	else if (SameText(ttyp, "Split Complementary")) {
-		SetPanelCol(TriPanel1,	HslToCol((h + 210)%360, s, l), "-H150");
-		SetPanelCol(TriPanel2,	col, "0");
-		SetPanelCol(TriPanel3,	HslToCol((h + 150)%360, s, l), "+H150");
-	}
-	else if (SameText(ttyp, "Analogous")) {
-		SetPanelCol(TriPanel1,	HslToCol((h + 330)%360, s, l), "-H30");
-		SetPanelCol(TriPanel2,	col, "0");
-		SetPanelCol(TriPanel3,	HslToCol((h +  30)%360, s, l), "+H30");
-	}
-	else if (SameText(ttyp, "Tetrad")) {
-		SetPanelCol(TriPanel1,	HslToCol((h + 270)%360, s, l), "-H90");
-		SetPanelCol(TriPanel2,	col, "0");
-		SetPanelCol(TriPanel3,	HslToCol((h +  90)%360, s, l), "+H90");
-	}
-	else if (SameText(ttyp, "Contrast(L20)")) {
-		if (l<=80 && l>=20) {
-			SetPanelCol(TriPanel1,	HslToCol(h, s, l + 20), "+L20");
-			SetPanelCol(TriPanel2,	col, "0");
-			SetPanelCol(TriPanel3,	HslToCol(h, s, l - 20), "-L20");
-		}
-		else if (l>80) {
-			SetPanelCol(TriPanel1,	col, "0");
-			SetPanelCol(TriPanel2,	HslToCol(h, s, l - 20), "-L20");
-			SetPanelCol(TriPanel3,	HslToCol(h, s, l - 40), "-L40");
-		}
-		else if (l<20) {
-			SetPanelCol(TriPanel1,	col, "0");
-			SetPanelCol(TriPanel2,	HslToCol(h, s, l + 20), "+L20");
-			SetPanelCol(TriPanel3,	HslToCol(h, s, l + 40), "+L40");
-		}
-	}
-	else if (SameText(ttyp, "Contrast(S20)")) {
-		if (s<=80 && s>=20) {
-			SetPanelCol(TriPanel1,	HslToCol(h, s + 20, l), "+S20");
-			SetPanelCol(TriPanel2,	col, "0");
-			SetPanelCol(TriPanel3,	HslToCol(h, s - 20, l), "-S20");
-		}
-		else if (s>80) {
-			SetPanelCol(TriPanel1,	col, "0");
-			SetPanelCol(TriPanel2,	HslToCol(h, s - 20, l), "-S20");
-			SetPanelCol(TriPanel3,	HslToCol(h, s - 40, l), "-S40");
-		}
-		else if (s<20) {
-			SetPanelCol(TriPanel1,	col, "0");
-			SetPanelCol(TriPanel2,	HslToCol(h, s + 20, l), "+S20");
-			SetPanelCol(TriPanel3,	HslToCol(h, s + 40, l), "+S40");
-		}
-	}
+	if		(SameText(ttyp, "Triad"))				SetTriColorCore(col, "H120");
+	else if (SameText(ttyp, "Split Complementary")) SetTriColorCore(col, "H150");
+	else if (SameText(ttyp, "Analogous"))			SetTriColorCore(col, "H30");
+	else if (SameText(ttyp, "Tetrad"))				SetTriColorCore(col, "H90");
+	else if (EndsText("(S20)", ttyp))				SetTriColorCore(col, "S20");
+	else if (EndsText("(L20)", ttyp)) 				SetTriColorCore(col, "L20");
+	else if (StartsText("Custom", ttyp))			SetTriColorCore(col, CustomScheme);
 }
 //---------------------------------------------------------------------------
 void __fastcall TVclColForm::ClearRightPanel()
@@ -649,6 +674,31 @@ void __fastcall TVclColForm::SelFontItemClick(TObject *Sender)
 		ListFont->Assign(FontDialog1->Font);
 		SetListBoxFont(ColorListBox);
 		SetListBoxFont(ValListBox);
+	}
+}
+//---------------------------------------------------------------------------
+//Custom Scheme Setting
+//---------------------------------------------------------------------------
+void __fastcall TVclColForm::CustomSetItemClick(TObject *Sender)
+{
+	CustomDlg->Left   = TriComboBox->ClientToScreen(Point(0, 0)).x;
+	CustomDlg->Top    = TriComboBox->ClientToScreen(Point(0, TriComboBox->Height)).y + 8;
+	CustomDlg->LastH  = IniFile->ReadInteger("Option", "LastH", 0);
+	CustomDlg->LastS  = IniFile->ReadInteger("Option", "LastS", 0);
+	CustomDlg->LastL  = IniFile->ReadInteger("Option", "LastL", 0);
+	CustomDlg->Scheme = CustomScheme;
+	CustomDlg->ShowModal();
+	CustomScheme = CustomDlg->Scheme;
+	IniFile->WriteInteger("Option", "LastH", CustomDlg->LastH);
+	IniFile->WriteInteger("Option", "LastS", CustomDlg->LastS);
+	IniFile->WriteInteger("Option", "LastL", CustomDlg->LastL);
+
+	int idx = TriComboBox->ItemIndex;
+	TriComboBox->Items->Strings[TriComboBox->Items->Count - 1] = "Custom Scheme (" + CustomScheme + ")";
+	TriComboBox->ItemIndex = idx;
+	if (TriComboBox->ItemIndex == TriComboBox->Items->Count - 1) {
+		SetTriColor(ColPanel->Color);
+		ColPanelClick(ColPanel);
 	}
 }
 //---------------------------------------------------------------------------

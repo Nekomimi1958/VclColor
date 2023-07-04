@@ -4,7 +4,7 @@ object VclColForm: TVclColForm
   BorderIcons = [biSystemMenu]
   Caption = 'VCL Color'
   ClientHeight = 457
-  ClientWidth = 584
+  ClientWidth = 588
   Color = clBtnFace
   Constraints.MaxWidth = 600
   Constraints.MinWidth = 600
@@ -13,7 +13,6 @@ object VclColForm: TVclColForm
   Font.Height = -13
   Font.Name = 'Segoe UI'
   Font.Style = []
-  PopupMenu = PopupMenu1
   Position = poDesigned
   ShowHint = True
   OnClose = FormClose
@@ -23,7 +22,7 @@ object VclColForm: TVclColForm
   OnShow = FormShow
   TextHeight = 17
   object RightPanel: TPanel
-    Left = 384
+    Left = 388
     Top = 0
     Width = 200
     Height = 457
@@ -31,6 +30,8 @@ object VclColForm: TVclColForm
     BevelOuter = bvNone
     BorderWidth = 4
     TabOrder = 0
+    ExplicitLeft = 384
+    ExplicitHeight = 456
     object ValListBox: TListBox
       Left = 4
       Top = 221
@@ -44,7 +45,7 @@ object VclColForm: TVclColForm
       TabOrder = 0
       OnDblClick = ValListBoxDblClick
       OnDrawItem = ValListBoxDrawItem
-      ExplicitLeft = 2
+      ExplicitHeight = 231
     end
     object ColPanel: TPanel
       Left = 4
@@ -85,6 +86,7 @@ object VclColForm: TVclColForm
       Height = 64
       Align = alTop
       BevelOuter = bvNone
+      PopupMenu = PopupMenu3
       TabOrder = 3
       object TriPanel1: TPanel
         Tag = 2
@@ -151,6 +153,7 @@ object VclColForm: TVclColForm
       Hint = 'Color Scheme'
       Align = alTop
       Style = csDropDownList
+      PopupMenu = PopupMenu3
       TabOrder = 4
       OnClick = TriComboBoxClick
       Items.Strings = (
@@ -158,25 +161,28 @@ object VclColForm: TVclColForm
         'Split Complementary'
         'Analogous'
         'Tetrad'
-        'Contrast(L20)'
-        'Contrast(S20)')
+        'Contrast (S20)'
+        'Contrast (L20)'
+        'Custom Scheme')
     end
   end
   object LeftPanel: TPanel
     Left = 0
     Top = 0
-    Width = 384
+    Width = 388
     Height = 457
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 384
+    ExplicitHeight = 456
     DesignSize = (
-      384
+      388
       457)
     object TabControl1: TTabControl
       Left = 0
       Top = 29
-      Width = 384
+      Width = 388
       Height = 428
       Align = alClient
       TabOrder = 0
@@ -187,10 +193,12 @@ object VclColForm: TVclColForm
       TabIndex = 0
       TabWidth = 100
       OnChange = TabControl1Change
+      ExplicitWidth = 384
+      ExplicitHeight = 427
       object ColorListBox: TListBox
         Left = 4
         Top = 28
-        Width = 376
+        Width = 380
         Height = 396
         Style = lbOwnerDrawFixed
         Align = alClient
@@ -198,18 +206,21 @@ object VclColForm: TVclColForm
         TabOrder = 0
         OnClick = ColorListBoxClick
         OnDrawItem = ColorListBoxDrawItem
+        ExplicitWidth = 376
+        ExplicitHeight = 395
       end
     end
     object TopPanel: TPanel
       Left = 0
       Top = 0
-      Width = 384
+      Width = 388
       Height = 29
       Align = alTop
       AutoSize = True
       BevelOuter = bvNone
       BorderWidth = 2
       TabOrder = 1
+      ExplicitWidth = 384
       object Label4: TLabel
         Left = 14
         Top = 6
@@ -259,13 +270,14 @@ object VclColForm: TVclColForm
       end
     end
     object TargetPanel: TPanel
-      Left = 346
+      Left = 350
       Top = 8
       Width = 34
       Height = 34
       Anchors = [akTop, akRight]
       BevelOuter = bvLowered
       TabOrder = 2
+      ExplicitLeft = 346
       object Image1: TImage
         Left = 1
         Top = 1
@@ -325,6 +337,14 @@ object VclColForm: TVclColForm
     object CopyAllItem: TMenuItem
       Caption = 'Copy All'
       OnClick = CopyAllItemClick
+    end
+  end
+  object PopupMenu3: TPopupMenu
+    Left = 528
+    Top = 165
+    object CustomSetItem: TMenuItem
+      Caption = 'Custom Scheme Setting...'
+      OnClick = CustomSetItemClick
     end
   end
 end
