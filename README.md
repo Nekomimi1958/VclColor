@@ -8,7 +8,10 @@ Typical color schemes can be referenced.
 
 ## Option
 
-The font of list box can be selected from the right-click menu.  
+The following settings are available in the right-click menu.  
+
++ Select font for list
++ Change VCL style
 
 ## Development Environment
 
