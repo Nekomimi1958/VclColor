@@ -12,4 +12,4 @@ The font of list box can be selected from the right-click menu.
 
 ## Development Environment
 
-C++Builder 11.3 (BCC32C)
+C++Builder 12 (BCC32C)

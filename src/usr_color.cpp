@@ -89,6 +89,19 @@ TColor GrayCol(TColor col, double gv)
 }
 
 //---------------------------------------------------------------------------
+TColor SafeCol(TColor col)
+{
+	int c = ColorToRGB(col);
+	int r = GetRValue(c);
+	int g = GetGValue(c);
+	int b = GetBValue(c);
+	r = (int)(r/51.0 + 0.5) * 51;
+	g = (int)(g/51.0 + 0.5) * 51;
+	b = (int)(b/51.0 + 0.5) * 51;
+	return TColor(RGB(r, g, b));
+}
+
+//---------------------------------------------------------------------------
 //RGB→HSL 変換
 //---------------------------------------------------------------------------
 void RgbToHsl(TColor col, int *h, int *s, int *l)
@@ -239,9 +252,9 @@ TColor AdjustColor(
 	int g = GetGValue(cref);
 	int b = GetBValue(cref);
 
-	r += adj;  if (r>255) r = 255; else if (r<0) r = 0;
-	g += adj;  if (g>255) g = 255; else if (g<0) g = 0;
-	b += adj;  if (b>255) b = 255; else if (b<0) b = 0;
+	r = std::clamp(r + adj, 0, 255);
+	g = std::clamp(g + adj, 0, 255);
+	b = std::clamp(b + adj, 0, 255);
 
 	return TColor(RGB(r, g, b));
 }
@@ -265,9 +278,9 @@ TColor AdjustRGB(
 	int g = GetGValue(cref);
 	int b = GetBValue(cref);
 
-	r += adj_r;  if (r>255) r = 255; else if (r<0) r = 0;
-	g += adj_g;  if (g>255) g = 255; else if (g<0) g = 0;
-	b += adj_b;  if (b>255) b = 255; else if (b<0) b = 0;
+	r = std::clamp(r + adj_r, 0, 255);
+	g = std::clamp(g + adj_g, 0, 255);
+	b = std::clamp(b + adj_b, 0, 255);
 
 	if (is_br) {
 		int m = std::max(std::max(r, g), b) + std::min(std::min(r, g), b);

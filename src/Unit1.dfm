@@ -4,7 +4,7 @@ object VclColForm: TVclColForm
   BorderIcons = [biSystemMenu]
   Caption = 'VCL Color'
   ClientHeight = 457
-  ClientWidth = 588
+  ClientWidth = 584
   Color = clBtnFace
   Constraints.MaxWidth = 600
   Constraints.MinWidth = 600
@@ -22,7 +22,7 @@ object VclColForm: TVclColForm
   OnShow = FormShow
   TextHeight = 17
   object RightPanel: TPanel
-    Left = 388
+    Left = 384
     Top = 0
     Width = 200
     Height = 457
@@ -30,8 +30,6 @@ object VclColForm: TVclColForm
     BevelOuter = bvNone
     BorderWidth = 4
     TabOrder = 0
-    ExplicitLeft = 384
-    ExplicitHeight = 456
     object ValListBox: TListBox
       Left = 4
       Top = 221
@@ -45,7 +43,6 @@ object VclColForm: TVclColForm
       TabOrder = 0
       OnDblClick = ValListBoxDblClick
       OnDrawItem = ValListBoxDrawItem
-      ExplicitHeight = 231
     end
     object ColPanel: TPanel
       Left = 4
@@ -169,36 +166,34 @@ object VclColForm: TVclColForm
   object LeftPanel: TPanel
     Left = 0
     Top = 0
-    Width = 388
+    Width = 384
     Height = 457
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 384
-    ExplicitHeight = 456
     DesignSize = (
-      388
+      384
       457)
     object TabControl1: TTabControl
       Left = 0
       Top = 29
-      Width = 388
+      Width = 384
       Height = 428
       Align = alClient
       TabOrder = 0
       Tabs.Strings = (
         'VCL'
         'System'
+        'Style'
         'Web Safe')
       TabIndex = 0
-      TabWidth = 100
+      TabWidth = 82
       OnChange = TabControl1Change
-      ExplicitWidth = 384
-      ExplicitHeight = 427
+      OnChanging = TabControl1Changing
       object ColorListBox: TListBox
         Left = 4
         Top = 28
-        Width = 380
+        Width = 376
         Height = 396
         Style = lbOwnerDrawFixed
         Align = alClient
@@ -206,21 +201,22 @@ object VclColForm: TVclColForm
         TabOrder = 0
         OnClick = ColorListBoxClick
         OnDrawItem = ColorListBoxDrawItem
-        ExplicitWidth = 376
-        ExplicitHeight = 395
+        ExplicitLeft = 1
+        ExplicitTop = 1
+        ExplicitWidth = 32
+        ExplicitHeight = 32
       end
     end
     object TopPanel: TPanel
       Left = 0
       Top = 0
-      Width = 388
+      Width = 384
       Height = 29
       Align = alTop
       AutoSize = True
       BevelOuter = bvNone
       BorderWidth = 2
       TabOrder = 1
-      ExplicitWidth = 384
       object Label4: TLabel
         Left = 14
         Top = 6
@@ -277,29 +273,18 @@ object VclColForm: TVclColForm
       Anchors = [akTop, akRight]
       BevelOuter = bvLowered
       TabOrder = 2
-      ExplicitLeft = 346
-      object Image1: TImage
-        Left = 1
-        Top = 1
+      object VirtualImage1: TVirtualImage
+        Left = 2
+        Top = 2
         Width = 32
         Height = 32
-        Hint = 'Spuit Tool'
-        Align = alClient
-        Picture.Data = {
-          0954506E67496D61676589504E470D0A1A0A0000000D49484452000000200000
-          00200804000000D973B27F000000097048597300000F6100000F6101A83FA769
-          0000008B4944415478DAD595410AC0200C04BBFF7FF4F6248D71AD6E8442BD14
-          9A99113C28AEC38582C368BA01E6ED3F0E70F883FF0428FF1A677018A096C367
-          156004213A2BBD43CD0099612B90F58187A14B1667FA5B604B9F0F36F5D9685B
-          D7434357634B1F0153CF88ADF750418F58499701EFAA6D28C37B61DD9368BA3C
-          153B5078E870A63F81925CDE35AE1B04982F21D1680AE10000000049454E44AE
-          426082}
-        OnMouseDown = Image1MouseDown
-        OnMouseUp = Image1MouseUp
-        ExplicitLeft = 8
-        ExplicitTop = 8
-        ExplicitWidth = 105
-        ExplicitHeight = 105
+        ImageCollection = ImageCollection1
+        ImageWidth = 0
+        ImageHeight = 0
+        ImageIndex = 0
+        ImageName = 'SPUIT_TOOL'
+        OnMouseDown = VirtualImage1MouseDown
+        OnMouseUp = VirtualImage1MouseUp
       end
     end
   end
@@ -310,11 +295,18 @@ object VclColForm: TVclColForm
     Top = 75
   end
   object PopupMenu1: TPopupMenu
+    AutoHotkeys = maManual
     Left = 120
     Top = 77
     object SelFontItem: TMenuItem
       Caption = 'Select List Font'
       OnClick = SelFontItemClick
+    end
+    object Sep_1: TMenuItem
+      Caption = '-'
+    end
+    object StyleItem: TMenuItem
+      Caption = 'Style'
     end
   end
   object FontDialog1: TFontDialog
@@ -346,5 +338,25 @@ object VclColForm: TVclColForm
       Caption = 'Custom Scheme Setting...'
       OnClick = CustomSetItemClick
     end
+  end
+  object ImageCollection1: TImageCollection
+    Images = <
+      item
+        Name = 'SPUIT_TOOL'
+        SourceImages = <
+          item
+            Image.Data = {
+              89504E470D0A1A0A0000000D4948445200000020000000200804000000D973B2
+              7F000000097048597300000F6100000F6101A83FA7690000009A494441544889
+              BD95510E8030084399F1FE57C69F6DC280A530239FD2D776263AA2C369058625
+              9935E035FE2A34583DCAF94444EDB8C16F47B0E53BFD53032FBF933796C33249
+              852247600E4A60063CD0F03D6278971AFDDE40E3AE766700E03B03088F17201E
+              AD60DC5F26706F9DC2AD2089AF9234AE45055CCA4AB8FB3165F0D760C6E7F021
+              66F3041EFD472A5C744DE457EEC9D9A0047F320F25882730C67763F200000000
+              49454E44AE426082}
+          end>
+      end>
+    Left = 424
+    Top = 312
   end
 end

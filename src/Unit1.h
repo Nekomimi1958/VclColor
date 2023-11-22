@@ -14,6 +14,9 @@
 #include <Vcl.Menus.hpp>
 #include <Vcl.Dialogs.hpp>
 #include "usr_color.h"
+#include <Vcl.BaseImageCollection.hpp>
+#include <Vcl.ImageCollection.hpp>
+#include <Vcl.VirtualImage.hpp>
 
 //---------------------------------------------------------------------------
 class TVclColForm : public TForm
@@ -23,7 +26,6 @@ __published:	// IDE で管理されるコンポーネント
 	TComboBox *L_ComboBox;
 	TComboBox *TriComboBox;
 	TFontDialog *FontDialog1;
-	TImage *Image1;
 	TLabel *Label4;
 	TLabel *Label5;
 	TListBox *ColorListBox;
@@ -32,6 +34,8 @@ __published:	// IDE で管理されるコンポーネント
 	TMenuItem *CopyValItem;
 	TMenuItem *CustomSetItem;
 	TMenuItem *SelFontItem;
+	TMenuItem *Sep_1;
+	TMenuItem *StyleItem;
 	TPanel *CmpPanel;
 	TPanel *ColPanel;
 	TPanel *LeftPanel;
@@ -47,6 +51,8 @@ __published:	// IDE で管理されるコンポーネント
 	TPopupMenu *PopupMenu3;
 	TTabControl *TabControl1;
 	TTimer *Timer1;
+	TVirtualImage *VirtualImage1;
+	TImageCollection *ImageCollection1;
 
 	void __fastcall FormCreate(TObject *Sender);
 	void __fastcall FormShow(TObject *Sender);
@@ -54,6 +60,7 @@ __published:	// IDE で管理されるコンポーネント
 	void __fastcall FormDestroy(TObject *Sender);
 	void __fastcall Timer1Timer(TObject *Sender);
 	void __fastcall FormResize(TObject *Sender);
+	void __fastcall TabControl1Changing(TObject *Sender, bool &AllowChange);
 	void __fastcall TabControl1Change(TObject *Sender);
 	void __fastcall FilterComboBoxClick(TObject *Sender);
 	void __fastcall TriComboBoxClick(TObject *Sender);
@@ -62,12 +69,15 @@ __published:	// IDE で管理されるコンポーネント
 	void __fastcall ColPanelClick(TObject *Sender);
 	void __fastcall ValListBoxDrawItem(TWinControl *Control, int Index, TRect &Rect, TOwnerDrawState State);
 	void __fastcall ValListBoxDblClick(TObject *Sender);
-	void __fastcall Image1MouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift, int X, int Y);
-	void __fastcall Image1MouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift, int X, int Y);
 	void __fastcall CopyValItemClick(TObject *Sender);
 	void __fastcall CopyAllItemClick(TObject *Sender);
-	void __fastcall SelFontItemClick(TObject *Sender);
 	void __fastcall CustomSetItemClick(TObject *Sender);
+	void __fastcall SelFontItemClick(TObject *Sender);
+	void __fastcall SelStyleItemClick(TObject *Sender);
+	void __fastcall VirtualImage1MouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
+          int X, int Y);
+	void __fastcall VirtualImage1MouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
+          int X, int Y);
 
 private:	// ユーザー宣言
 	TIniFile *IniFile;
@@ -77,14 +87,23 @@ private:	// ユーザー宣言
 	TCursor crSpuit;
 	bool Capturing;
 	TColor LastColor;
+	TColor IdxColor;
+
+	TColor col_window;
+	TColor col_VCL;
+	TColor col_System;
+	TColor col_Style;
 
 	TStringList *VclColList;
+	TStringList *StyleColList;
 	TStringList *SafeColList;
 	TStringList *SysColList;
 
 	TStringList *FCurList;
 	TStringList * __fastcall GetCurList() {
-		return ((TabControl1->TabIndex==1)? SysColList : (TabControl1->TabIndex==2)? SafeColList : VclColList);
+		return ((TabControl1->TabIndex==1)? SysColList :
+				(TabControl1->TabIndex==2)? StyleColList :
+				(TabControl1->TabIndex==3)? SafeColList : VclColList);
 	}
 	__property TStringList *CurList = {read = GetCurList};
 
@@ -96,6 +115,7 @@ private:	// ユーザー宣言
 	}
 
 	void __fastcall ClearRightPanel();
+    void __fastcall SetStyleColList();
 	void __fastcall SetTriColorCore(TColor col, UnicodeString cs);
 	void __fastcall SetTriColor(TColor col);
 

@@ -1,3 +1,5 @@
+#include <Vcl.Styles.hpp>
+#include <Vcl.Themes.hpp>
 //----------------------------------------------------------------------//
 // VclColor																//
 //----------------------------------------------------------------------//
@@ -9,6 +11,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 	try {
 		Application->Initialize();
 		Application->MainFormOnTaskBar = true;
+		TStyleManager::TrySetStyle("Windows10");
 		Application->CreateForm(__classid(TVclColForm), &VclColForm);
 		Application->CreateForm(__classid(TCustomDlg), &CustomDlg);
 		Application->Run();

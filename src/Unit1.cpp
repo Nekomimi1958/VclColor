@@ -24,18 +24,35 @@ void __fastcall TVclColForm::FormCreate(TObject *Sender)
 	Screen->Cursors[crSpuit] = (HCURSOR)::LoadImage(HInstance, _T("SPUIT_TOOL"), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
 	Capturing = false;
 
+	IdxColor = Graphics::clNone;
+
 	IniFile = new TIniFile(ChangeFileExt(Application->ExeName, ".INI"));
+	TStyleManager::SetStyle(IniFile->ReadString("General", "VclSytle", "Windows"));
+	Caption = "VCL Color - <" + TStyleManager::ActiveStyle->Name + ">";
 
 	ListFont = load_font_inf(IniFile, "List",	 Application->DefaultFont);
 	SetListBoxFont(ColorListBox);
 	SetListBoxFont(ValListBox);
 
+	//スタイル選択項目を初期化
+	DynamicArray<UnicodeString> styles = TStyleManager::StyleNames;
+	std::unique_ptr<TStringList> slst(new TStringList());
+	for (int i=0; i<styles.Length; i++) slst->Add(styles[i]);
+	slst->Sort();
+	for (int i=0; i<slst->Count; i++) {
+		TMenuItem *mp = new TMenuItem(StyleItem);
+		mp->Caption	  = slst->Strings[i];
+		mp->OnClick   = SelStyleItemClick;
+		StyleItem->Add(mp);
+	}
+
 	CustomScheme = IniFile->ReadString("Option", "CustomScheme", "H72");
 	TriComboBox->Items->Strings[TriComboBox->Items->Count - 1] = "Custom Scheme (" + CustomScheme + ")";
 
-	VclColList  = new TStringList();
-	SafeColList = new TStringList();
-	SysColList  = new TStringList();
+	VclColList   = new TStringList();
+	StyleColList = new TStringList();
+	SafeColList  = new TStringList();
+	SysColList   = new TStringList();
 
 	//VCL/Web Color
 	VclColList->AddObject("clBlack",			(TObject*)clBlack);
@@ -243,6 +260,9 @@ void __fastcall TVclColForm::FormCreate(TObject *Sender)
 	SysColList->AddObject("clGradientInactiveCaption",	(TObject*)clGradientInactiveCaption);
 	SysColList->AddObject("clMenuHighlight",	(TObject*)clMenuHighlight);
 	SysColList->AddObject("clMenuBar",			(TObject*)clMenuBar);
+
+	//Style Color
+	SetStyleColList();
 }
 //---------------------------------------------------------------------------
 void __fastcall TVclColForm::FormShow(TObject *Sender)
@@ -260,6 +280,7 @@ void __fastcall TVclColForm::FormClose(TObject *Sender, TCloseAction &Action)
 {
 	save_form_pos(this, IniFile);
 	save_font_inf(IniFile, "List",	ListFont);
+	IniFile->WriteString("General", "VclSytle", TStyleManager::ActiveStyle->Name);
 	IniFile->WriteString( "Option", "CustomScheme", CustomScheme);
 	IniFile->WriteInteger("Option", "TriComboIndex", TriComboBox->ItemIndex);
 }
@@ -267,6 +288,7 @@ void __fastcall TVclColForm::FormClose(TObject *Sender, TCloseAction &Action)
 void __fastcall TVclColForm::FormDestroy(TObject *Sender)
 {
 	delete VclColList;
+    delete StyleColList;
 	delete SafeColList;
 	delete SysColList;
 	delete ListFont;
@@ -303,6 +325,65 @@ void __fastcall TVclColForm::FormResize(TObject *Sender)
 {
 	ColorListBox->Invalidate();
 	ValListBox->Invalidate();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TVclColForm::SetStyleColList()
+{
+	col_window = TStyleManager::ActiveStyle->GetSystemColor(clWindow);
+	col_VCL    = AdjustColor(col_window, 24);
+	col_System = AdjustRGB(col_window, 0, 24, 0);
+	col_Style  = AdjustRGB(col_window, 0, 0, 24);
+
+	StyleColList->Clear();
+	for (int i=0; i<SysColList->Count; i++) {
+		TColor syscol = (TColor)(int)SysColList->Objects[i];
+		StyleColList->AddObject(SysColList->Strings[i],
+			(TObject*)TStyleManager::ActiveStyle->GetSystemColor(syscol));
+	}
+
+	StyleColList->AddObject("scBorder", 		(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scBorder));
+	StyleColList->AddObject("scButtonDisabled",	(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scButtonDisabled));
+	StyleColList->AddObject("scButtonFocused",	(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scButtonFocused));
+	StyleColList->AddObject("scButtonHot",		(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scButtonHot));
+	StyleColList->AddObject("scButtonNormal",	(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scButtonNormal));
+	StyleColList->AddObject("scButtonPressed",	(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scButtonPressed));
+	StyleColList->AddObject("scCategoryButtons",(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scCategoryButtons));
+	StyleColList->AddObject("scCategoryButtonsGradientBase",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scCategoryButtonsGradientBase));
+	StyleColList->AddObject("scCategoryButtonsGradientEnd",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scCategoryButtonsGradientEnd));
+	StyleColList->AddObject("scCategoryPanelGroup",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scCategoryPanelGroup));
+	StyleColList->AddObject("scComboBox",		(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scComboBox));
+	StyleColList->AddObject("scComboBoxDisabled",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scComboBoxDisabled));
+	StyleColList->AddObject("scEdit",			(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scEdit));
+	StyleColList->AddObject("scEditDisabled",	(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scEditDisabled));
+	StyleColList->AddObject("scGrid",			(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scGrid));
+	StyleColList->AddObject("scGenericBackground",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scGenericBackground));
+	StyleColList->AddObject("scGenericGradientBase",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scGenericGradientBase));
+	StyleColList->AddObject("scGenericGradientEnd",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scGenericGradientEnd));
+	StyleColList->AddObject("scHintGradientBase",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scHintGradientBase));
+	StyleColList->AddObject("scHintGradientEnd",(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scHintGradientEnd));
+	StyleColList->AddObject("scListBox",		(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scListBox));
+	StyleColList->AddObject("scListBoxDisabled",(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scListBoxDisabled));
+	StyleColList->AddObject("scListView",		(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scListView));
+	StyleColList->AddObject("scPanel",			(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scPanel));
+	StyleColList->AddObject("scPanelDisabled",	(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scPanelDisabled));
+	StyleColList->AddObject("scSplitter",		(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scSplitter));
+	StyleColList->AddObject("scToolBarGradientBase",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scToolBarGradientBase));
+	StyleColList->AddObject("scToolBarGradientBase",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scToolBarGradientBase));
+	StyleColList->AddObject("scToolBarGradientEnd",
+												(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scToolBarGradientEnd));
+	StyleColList->AddObject("scTreeView",		(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scTreeView));
+	StyleColList->AddObject("scWindow",			(TObject*)TStyleManager::ActiveStyle->GetStyleColor(scWindow));
 }
 
 //---------------------------------------------------------------------------
@@ -396,6 +477,11 @@ void __fastcall TVclColForm::ClearRightPanel()
 	SetPanelCol(TriPanel3, TColor(RGB(48, 48, 48)), "---");
 }
 //---------------------------------------------------------------------------
+void __fastcall TVclColForm::TabControl1Changing(TObject *Sender, bool &AllowChange)
+{
+	IdxColor = Graphics::clNone;
+}
+//---------------------------------------------------------------------------
 void __fastcall TVclColForm::TabControl1Change(TObject *Sender)
 {
 	ClearRightPanel();
@@ -459,16 +545,20 @@ void __fastcall TVclColForm::ColorListBoxDrawItem(TWinControl *Control, int Inde
 	TOwnerDrawState State)
 {
 	TListBox *lp = (TListBox*)Control;
+
+	int col_i = (int)lp->Items->Objects[Index];
+
 	TCanvas  *cv = lp->Canvas;
 	cv->Font->Assign(lp->Font);
-	cv->Brush->Color = State.Contains(odSelected)? clHighlight : clWindow;	
-	cv->Font->Color  = State.Contains(odSelected)? clHighlightText : clWindowText;
+	cv->Brush->Color = State.Contains(odSelected)? TStyleManager::ActiveStyle->GetSystemColor(clHighlight) :
+						(ColorToRGB(IdxColor)==ColorToRGB((TColor)col_i))? AdjustColor(col_window, 24) : col_window;
+	cv->Font->Color  = TStyleManager::ActiveStyle->GetSystemColor(
+							State.Contains(odSelected)? clHighlightText : clWindowText);
 	TRect rc = Rect;  rc.Right = rc.Right - 80;
 	cv->FillRect(rc);
 
 	int yp = Rect.Top + (Rect.Height() - cv->TextHeight("Q"))/2;
 	cv->TextOut(Rect.Left + 2, yp, lp->Items->Strings[Index]);
-	int col_i = (int)lp->Items->Objects[Index];
 	cv->TextOut(Rect.Right - cv->TextWidth("0x00000000") - 88, yp,
 					UnicodeString().sprintf(_T("0x%08x"), col_i));
 	//Color
@@ -494,6 +584,8 @@ void __fastcall TVclColForm::ColorListBoxClick(TObject *Sender)
 		SetPanelCol(CmpPanel, ComplementaryCol(col));
 		SetTriColor(col);
 		ColPanelClick(ColPanel);
+    	IdxColor = col;
+		lp->Invalidate();
 	}
 }
 //---------------------------------------------------------------------------
@@ -561,7 +653,14 @@ void __fastcall TVclColForm::ColPanelClick(TObject *Sender)
 			if (!SameText(SysColList->Strings[i], ColPanel->Caption)
 				&& col==TColor(ColorToRGB((TColor)(int)SysColList->Objects[i])))
 			{
-				ValListBox->Items->Add("= " + SysColList->Strings[i] + "*");
+				ValListBox->Items->Add("= " + SysColList->Strings[i] + " *");
+			}
+		}
+		for (int i=0; i<StyleColList->Count; i++) {
+			if (!SameText(StyleColList->Strings[i], ColPanel->Caption)
+				&& col==TColor(ColorToRGB((TColor)(int)StyleColList->Objects[i])))
+			{
+				ValListBox->Items->Add("= " + StyleColList->Strings[i] + " +");
 			}
 		}
 	}
@@ -576,11 +675,21 @@ void __fastcall TVclColForm::ValListBoxDrawItem(TWinControl *Control, int Index,
 	TCanvas  *cv = lp->Canvas;
 	UnicodeString lbuf = lp->Items->Strings[Index];
 	bool is_hdr = (lbuf.Length()==1 || StartsStr("<", lbuf));
-	cv->Brush->Color = is_hdr? clBtnFace : State.Contains(odSelected)? clHighlight : clWindow;
+   	cv->Brush->Color = is_hdr? TStyleManager::ActiveStyle->GetSystemColor(clBtnFace) :
+					  State.Contains(odSelected)? TStyleManager::ActiveStyle->GetSystemColor(clHighlight) :
+							  EndsStr("*", lbuf)? col_System :
+							  EndsStr("+", lbuf)? col_Style :
+							StartsStr("=", lbuf)? col_VCL :
+						   (!is_hdr && Index==0)? ((TabControl1->TabIndex==0)? col_VCL :
+												   (TabControl1->TabIndex==1)? col_System :
+												   (TabControl1->TabIndex==2)? col_Style : col_window)
+												: col_window;
 	cv->FillRect(Rect);
 
 	cv->Font->Assign(lp->Font);
-	cv->Font->Color = is_hdr? clBtnText : State.Contains(odSelected)? clHighlightText : clWindowText;
+	cv->Font->Color = is_hdr? TStyleManager::ActiveStyle->GetSystemColor(clBtnText) :
+					  State.Contains(odSelected)? TStyleManager::ActiveStyle->GetSystemColor(clHighlightText)
+												: TStyleManager::ActiveStyle->GetSystemColor(clWindowText);
 	int xp = Rect.Left + 2;
 	int yp = Rect.Top + (Rect.Height() - cv->TextHeight("Q"))/2;
 	if (lbuf.Length()==1) {
@@ -594,6 +703,7 @@ void __fastcall TVclColForm::ValListBoxDrawItem(TWinControl *Control, int Index,
 		cv->TextOut(xp, Rect.Top, "▼");
 	}
 	else {
+		lbuf = TRegEx::Replace(lbuf, "[+*]$", EmptyStr);
 		if (StartsStr("<", lbuf)) xp = (lp->ClientWidth - cv->TextWidth(lbuf))/2;
 		cv->TextOut(xp, yp, lbuf);
 	}
@@ -612,24 +722,24 @@ void __fastcall TVclColForm::ValListBoxDblClick(TObject *Sender)
 //---------------------------------------------------------------------------
 // Spuit Tool
 //---------------------------------------------------------------------------
-void __fastcall TVclColForm::Image1MouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
-	int X, int Y)
+void __fastcall TVclColForm::VirtualImage1MouseDown(TObject *Sender, TMouseButton Button,
+	TShiftState Shift, int X, int Y)
 {
 	if (!Capturing && Button == mbLeft) {
 		Screen->Cursor = crSpuit;
-		Image1->Visible = false;
+		VirtualImage1->Visible = false;
 		Capturing = true;
 		LastColor = Graphics::clNone;
 	}
 }
 //---------------------------------------------------------------------------
-void __fastcall TVclColForm::Image1MouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
-	int X, int Y)
+void __fastcall TVclColForm::VirtualImage1MouseUp(TObject *Sender, TMouseButton Button,
+          TShiftState Shift, int X, int Y)
 {
 	if (Capturing && Button == mbLeft) {
 		Capturing = false;
 		Screen->Cursor = crDefault;
-		Image1->Visible = true;
+		VirtualImage1->Visible = true;
 	}
 }
 //---------------------------------------------------------------------------
@@ -665,18 +775,6 @@ void __fastcall TVclColForm::CopyAllItemClick(TObject *Sender)
 }
 
 //---------------------------------------------------------------------------
-// Select List Font
-//---------------------------------------------------------------------------
-void __fastcall TVclColForm::SelFontItemClick(TObject *Sender)
-{
-	FontDialog1->Font->Assign(ColorListBox->Font);
-	if (FontDialog1->Execute()) {
-		ListFont->Assign(FontDialog1->Font);
-		SetListBoxFont(ColorListBox);
-		SetListBoxFont(ValListBox);
-	}
-}
-//---------------------------------------------------------------------------
 //Custom Scheme Setting
 //---------------------------------------------------------------------------
 void __fastcall TVclColForm::CustomSetItemClick(TObject *Sender)
@@ -699,6 +797,29 @@ void __fastcall TVclColForm::CustomSetItemClick(TObject *Sender)
 	if (TriComboBox->ItemIndex == TriComboBox->Items->Count - 1) {
 		SetTriColor(ColPanel->Color);
 		ColPanelClick(ColPanel);
+	}
+}
+//---------------------------------------------------------------------------
+// Select List Font
+//---------------------------------------------------------------------------
+void __fastcall TVclColForm::SelFontItemClick(TObject *Sender)
+{
+	FontDialog1->Font->Assign(ColorListBox->Font);
+	if (FontDialog1->Execute()) {
+		ListFont->Assign(FontDialog1->Font);
+		SetListBoxFont(ColorListBox);
+		SetListBoxFont(ValListBox);
+	}
+}
+//---------------------------------------------------------------------------
+// Change Style
+//---------------------------------------------------------------------------
+void __fastcall TVclColForm::SelStyleItemClick(TObject *Sender)
+{
+	save_form_pos(this, IniFile);
+	if (TStyleManager::TrySetStyle(((TMenuItem *)Sender)->Caption)) {
+		Caption = "VCL Color - <" + TStyleManager::ActiveStyle->Name + ">";
+		SetStyleColList();
 	}
 }
 //---------------------------------------------------------------------------
